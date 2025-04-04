@@ -31,9 +31,10 @@ int main(void)
 	{
 		linea = readline(">");
 
-		if (!linea)
+		if (strcmp(linea, "") == 0)
 		{
-			break;
+			free(linea);
+			abort();
 		}
 		printf("%s\n", linea);
 		log_info(logger, linea);
