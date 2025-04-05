@@ -4,9 +4,7 @@ t_log *logger;
 
 int iniciar_servidor(void)
 {
-
 	int socket_servidor;
-	int err;
 
 	struct addrinfo hints, *serverinfo;
 
@@ -15,25 +13,25 @@ int iniciar_servidor(void)
 	hints.ai_socktype = SOCK_STREAM; // TCP
 	hints.ai_flags = AI_PASSIVE;	 // escucha en todas las direccions posibles
 
-	err = getaddrinfo(NULL, PUERTO, &hints, &serverinfo);
+	getaddrinfo(NULL, PUERTO, &hints, &serverinfo);
 
 	// Creamos el socket de escucha del servidor, que será SOCKET_SERVIDOR
 
-	int socket_servidor = socket(serverinfo->ai_family,
-								 serverinfo->ai_socktype,
-								 serverinfo->ai_protocol);
+	socket_servidor = socket(serverinfo->ai_family,
+							 serverinfo->ai_socktype,
+							 serverinfo->ai_protocol);
 
 	// Asociamos el socket a un puerto
 
-	err = setsockopt(socket_servidor, SOL_SOCKET, SO_REUSEPORT, &(int){1}, sizeof(int));
-	err = bind(socket_servidor, serverinfo->ai_addr, serverinfo->ai_addrlen);
+	setsockopt(socket_servidor, SOL_SOCKET, SO_REUSEPORT, &(int){1}, sizeof(int));
+	bind(socket_servidor, serverinfo->ai_addr, serverinfo->ai_addrlen);
 
 	// Escuchamos las conexiones entrantes
 
-	err = listen(socket_servidor, SOMAXCONN);
+	listen(socket_servidor, SOMAXCONN);
 
 	freeaddrinfo(serverinfo);
-	log_trace(logger, "Listo para escuchar a mi cliente");
+	log_info(logger, "Listo para escuchar a mi cliente");
 
 	return socket_servidor;
 }

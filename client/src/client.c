@@ -8,54 +8,46 @@ int main(void)
 	char *ip;
 	char *puerto;
 	char *valor;
-	char *linea;
 
 	t_log *logger;
-	t_config *config;
+	t_config *fileConfig;
 
 	/* ---------------- LOGGING ---------------- */
 
-	logger = log_create("/home/utnso/Documents/tp0/client/log/tp0.log", "clientLogger", 1, LOG_LEVEL_INFO);
-
-	log_info(logger, "Hola! soy un log");
+	logger = iniciar_logger();
+	log_info(logger, "Iniciando cliente...");
 
 	/* ---------------- ARCHIVOS DE CONFIGURACION ---------------- */
 
-	config = config_create("/home/utnso/Documents/tp0/client/cliente.config");
-
-	log_info(logger, config_get_string_value(config, "CLAVE"));
+	fileConfig = iniciar_config();
+	log_info(logger, config_get_string_value(fileConfig, "CLAVE"));
 
 	/* ---------------- LEER DE CONSOLA ---------------- */
 
-	while (1)
-	{
-		linea = readline(">");
+	leer_consola(logger);
 
-		if (strcmp(linea, "") == 0)
-		{
-			free(linea);
-			abort();
-		}
-		printf("%s\n", linea);
-		log_info(logger, linea);
-		free(linea);
-	}
-
-	config_destroy(config);
-	log_destroy(logger);
 	/*---------------------------------------------------PARTE 3-------------------------------------------------------------*/
 
 	// ADVERTENCIA: Antes de continuar, tenemos que asegurarnos que el servidor esté corriendo para poder conectarnos a él
 
+	ip = config_get_string_value(fileConfig, "IP");
+	puerto = config_get_string_value(fileConfig, "PUERTO");
+	valor = config_get_string_value(fileConfig, "CLAVE");
+
 	// Creamos una conexión hacia el servidor
 	conexion = crear_conexion(ip, puerto);
+	log_info(logger, "Conectado al servidor");
+	log_info(logger, "IP: %s", ip);
+	log_info(logger, "PUERTO: %s", puerto);
 
 	// Enviamos al servidor el valor de CLAVE como mensaje
+	enviar_mensaje(valor, conexion);
+	log_info(logger, "Enviando mensaje al servidor");
 
 	// Armamos y enviamos el paquete
 	paquete(conexion);
 
-	terminar_programa(conexion, logger, config);
+	terminar_programa(conexion, logger, fileConfig);
 
 	/*---------------------------------------------------PARTE 5-------------------------------------------------------------*/
 	// Proximamente
@@ -65,6 +57,8 @@ t_log *iniciar_logger(void)
 {
 	t_log *nuevo_logger;
 
+	nuevo_logger = log_create("/home/utnso/Documents/tp0/client/log/cliente.log", "clientLogger", 1, LOG_LEVEL_INFO);
+
 	return nuevo_logger;
 }
 
@@ -72,19 +66,33 @@ t_config *iniciar_config(void)
 {
 	t_config *nuevo_config;
 
+	nuevo_config = config_create("/home/utnso/Documents/tp0/client/cliente.config");
+
 	return nuevo_config;
 }
 
 void leer_consola(t_log *logger)
 {
-	char *leido;
-
-	// La primera te la dejo de yapa
-	leido = readline("> ");
-
-	// El resto, las vamos leyendo y logueando hasta recibir un string vacío
-
-	// ¡No te olvides de liberar las lineas antes de regresar!
+	char *linea;
+	while (1)
+	{
+		linea = readline(">");
+		if (!linea)
+		{
+			break;
+		}
+		if (linea)
+		{
+			add_history(linea);
+		}
+		if (!strncmp(linea, "exit", 4))
+		{
+			free(linea);
+			break;
+		}
+		printf("%s\n", linea);
+		free(linea);
+	}
 }
 
 void paquete(int conexion)
@@ -100,6 +108,7 @@ void paquete(int conexion)
 
 void terminar_programa(int conexion, t_log *logger, t_config *config)
 {
-	/* Y por ultimo, hay que liberar lo que utilizamos (conexion, log y config)
-	  con las funciones de las commons y del TP mencionadas en el enunciado */
+	log_destroy(logger);
+	config_destroy(config);
+	close(conexion);
 }
