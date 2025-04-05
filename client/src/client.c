@@ -77,33 +77,39 @@ void leer_consola(t_log *logger)
 	while (1)
 	{
 		linea = readline(">");
-		if (!linea)
+
+		if (strcmp(linea, "") == 0)
 		{
 			break;
-		}
-		if (linea)
-		{
-			add_history(linea);
-		}
-		if (!strncmp(linea, "exit", 4))
-		{
 			free(linea);
-			break;
 		}
 		printf("%s\n", linea);
+		log_info(logger, linea);
 		free(linea);
 	}
 }
 
 void paquete(int conexion)
 {
-	// Ahora toca lo divertido!
-	char *leido;
+
+	char *leido = NULL;
 	t_paquete *paquete;
 
-	// Leemos y esta vez agregamos las lineas al paquete
+	paquete = crear_paquete();
 
-	// ¡No te olvides de liberar las líneas y el paquete antes de regresar!
+	leido = readline("> ");
+	while (strcmp(leido, "") != 0)
+	{
+		agregar_a_paquete(paquete, leido, strlen(leido) + 1);
+		free(leido);
+		leido = readline("> ");
+	}
+
+	free(leido);
+
+	enviar_paquete(paquete, conexion);
+
+	eliminar_paquete(paquete);
 }
 
 void terminar_programa(int conexion, t_log *logger, t_config *config)
